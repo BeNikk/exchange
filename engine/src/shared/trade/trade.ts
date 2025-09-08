@@ -26,6 +26,7 @@ export async function trade(tradeId:string){
 }
 
 async function createTrade(tradeObj){
-  console.log(tradeObj);
+  const tradeId = tradeObj.id;
+  const userId = tradeObj.userId;
 }
 
