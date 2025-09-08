@@ -12,9 +12,10 @@ tradeRouter.post("/trade/create",async(req:Request,res:Response)=>{
      const startTime = Date.now();
      const tradeId = randomUUIDv7();
      const id = await client.xAdd("trade-stream","*",{
-      userId,
-      asset,
-      type,
+      tradeId:tradeId,
+      userId:userId.toString(),
+      asset:asset,
+      type:type,
       margin:margin.toString(),
       leverage:leverage.toString(),
       slippage:slippage.toString(),

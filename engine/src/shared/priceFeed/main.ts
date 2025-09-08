@@ -5,7 +5,6 @@ export async function subscribeToPriceFeeds(){
     const parsedData = JSON.parse(data);
     parsedData.price_updates.forEach(({ asset, price, decimal }: { asset: string; price: number; decimal: number }) => {
       PRICES[asset] = { price, decimal };
-      console.log(PRICES);
     });
   })
 }
