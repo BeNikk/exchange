@@ -1,4 +1,4 @@
-import { BALANCES, openOrders } from "../../shared/objects.ts";
+import { BALANCES, openOrders, PRICES } from "../../shared/objects.ts";
 import { tradeListener } from "../../index.ts";
 export async function trade(tradeId:string){
   try {
@@ -26,7 +26,39 @@ export async function trade(tradeId:string){
 }
 
 async function createTrade(tradeObj){
-  const tradeId = tradeObj.id;
-  const userId = tradeObj.userId;
-}
+  try {
+   const userId = tradeObj.userId;
+  const currentPriceOfAsset = PRICES[tradeObj.asset];
+  console.log(currentPriceOfAsset);
+  const obj = { ...tradeObj, openingPrice:currentPriceOfAsset};
+  if(BALANCES[userId].usd<Number(tradeObj.margin)){
+  await tradeListener.xAdd("callback","*",{
+    tradeId:tradeObj.tradeId,
+    status:"REJECTED",
+    userId: tradeObj.userId.toString(),
+    asset: tradeObj.asset,
+    })
+   return;
+  }
+  BALANCES[userId].usd -= Number(tradeObj.margin);
+  BALANCES[userId].locked += Number(tradeObj.margin);
+  openOrders.push(obj);
+  console.log('Trade created');
+  await tradeListener.xAdd("callback","*",{
+    tradeId:tradeObj.tradeId,
+    status:"ACCEPTED",
+    userId: tradeObj.userId.toString(),
+    asset: tradeObj.asset,
+  })
+    console.log("pushed to the quueue");
+  } catch (error) {
+    console.log("Error in creating the trade");
+    await tradeListener.xAdd("callback","*",{
+    tradeId:tradeObj.tradeId,
+    status:"FAILED",
+    userId: tradeObj.userId.toString(),
+    asset: tradeObj.asset,
+  }) 
+  }
+  }
 
