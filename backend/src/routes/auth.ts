@@ -7,7 +7,7 @@ const authRouter = express.Router();
 
 authRouter.post("/signup",async(req:Request,res:Response)=>{
   try {
-   const { email }   req.body; //IRL email should come by the user, but resend only allows sending email to the user who created the api key
+   const { email } =  req.body; //IRL email should come by the user, but resend only allows sending email to the user who created the api key
      const token = jwt.sign({email},JWT_SECRET);
      const response = await sendEmail(token);
      if (response == true){

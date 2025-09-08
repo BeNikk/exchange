@@ -1,19 +1,18 @@
 import { createClient } from "redis";
+import { subscribeToPriceFeeds } from "./shared/priceFeed/main.ts";
 
-const subscriber = createClient();
+export const subscriber = createClient();
+export const tradeListener = createClient(); // separate client as subscriber listens to subscribe methods and cannot xread etc
 
-const PRICES: Record<string, { price: number; decimal: number }> = {};
+async function connectClients(){
+  
+  await subscriber.connect();
+  await tradeListener.connect();
+  console.log("Clients connected");
+}
 
 async function main(){
-  await subscriber.connect();
-  console.log("connected");
-  subscriber.subscribe("price_feed",(data)=>{
-    const parsedData = JSON.parse(data);
-    console.log(parsedData);
-    parsedData.price_updates.forEach(({ asset, price, decimal }: { asset: string; price: number; decimal: number }) => {
-      PRICES[asset] = { price, decimal };
-    });
-    console.log(PRICES);
-  })
+  await connectClients();
+  subscribeToPriceFeeds();
 }
 main();
