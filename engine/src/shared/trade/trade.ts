@@ -11,7 +11,7 @@ export async function trade(tradeId:string){
           BLOCK:0, COUNT:1
         })
       if(!response) continue;
-
+    
        for( const msg of response[0].messages){
         const tradeObj = msg.message;
         createTrade(tradeObj);
@@ -27,6 +27,7 @@ export async function trade(tradeId:string){
 
 async function createTrade(tradeObj){
   try {
+    console.log(tradeObj);
    const userId = tradeObj.userId;
   const currentPriceOfAsset = PRICES[tradeObj.asset];
   console.log(currentPriceOfAsset);
