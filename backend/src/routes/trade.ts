@@ -5,7 +5,7 @@ import { createClient } from "redis";
 import { subscriber } from '../index.ts';
 export const writeClient = createClient(); // separate client for writing
 const tradeRouter = express.Router();
-tradeRouter.post("/trade/create",async(req:Request,res:Response)=>{
+tradeRouter.post("/create",async(req:Request,res:Response)=>{
     try {
      const { asset, type, margin, leverage, slippage } = req.body;
     console.log("trade/create");
@@ -29,6 +29,16 @@ tradeRouter.post("/trade/create",async(req:Request,res:Response)=>{
     } catch (error) {
        console.log("ERROR IN TRADE/CREATE",error);
        res.status(500).json({message:"Internal server error"});
+  }
+})
+
+tradeRouter.post("/close",async(req:Request,res:Response)=>{
+  try {
+
+    
+  } catch (error) {
+    console.log("ERROR IN CLOSE ROUTE");
+    res.status(500).json({message:"INTERNAL SERVER ERROR"}); 
   }
 })
 export default tradeRouter;

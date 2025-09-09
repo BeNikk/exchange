@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use("/api/v1",authRouter);
-app.use("/api/v1",tradeRouter);
+app.use("/api/v1/trade",tradeRouter);
 export let subscriber;
 async function start(){
   await initRedis();
