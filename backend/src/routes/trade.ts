@@ -8,11 +8,11 @@ const tradeRouter = express.Router();
 tradeRouter.post("/create",async(req:Request,res:Response)=>{
     try {
      const { asset, type, margin, leverage, slippage } = req.body;
-    console.log("trade/create");
      const userId = 1; // should come from cookies/middlewares 
      const startTime = Date.now();
      const tradeId = randomUUIDv7();
      const id = await writeClient.xAdd("trade-stream","*",{
+      order:"OPEN",
       tradeId:tradeId,
       userId:userId.toString(),
       asset:asset,
@@ -34,10 +34,25 @@ tradeRouter.post("/create",async(req:Request,res:Response)=>{
 
 tradeRouter.post("/close",async(req:Request,res:Response)=>{
   try {
-
+    const { orderId } = req.body;
+    const closeId = randomUUIDv7();
+    if(!orderId){
+      res.status(403).json({message:"Order Id required"});
+      return;
+    }
+    const userId = 1;
+    const id = await writeClient.xAdd("trade-stream","*",{
+      order:"CLOSE",
+      orderId:orderId,
+      closeId:closeId,
+      userId:userId.toString(),
+    });
+    console.log("pushed to queueu, id",id);
+    const response = await subscriber.waitForTrade(closeId);
+    return res.json(response);
     
   } catch (error) {
-    console.log("ERROR IN CLOSE ROUTE");
+    console.log("ERROR IN CLOSE ROUTE",error);
     res.status(500).json({message:"INTERNAL SERVER ERROR"}); 
   }
 })

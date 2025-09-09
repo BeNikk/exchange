@@ -14,7 +14,12 @@ export async function trade(tradeId:string){
     
        for( const msg of response[0].messages){
         const tradeObj = msg.message;
-        createTrade(tradeObj);
+        if(tradeObj.order == "OPEN"){
+          await createTrade(tradeObj);
+        }
+        else if(tradeObj.order == "CLOSE"){
+          await closeTrade(tradeObj);
+        }
         lastId = msg.id
       }
     }
@@ -62,4 +67,47 @@ async function createTrade(tradeObj){
   }) 
   }
   }
+  
+async function closeTrade(tradeObj) {
+  try {
+    const { closeId, orderId, userId } = tradeObj;
+    const orderIndex = openOrders.findIndex(o => o.tradeId === orderId);
+    if (orderIndex === -1) {
+      await tradeListener.xAdd("callback", "*", {
+        tradeId:closeId,
+        status: "NOT_FOUND",
+        orderId,
+        userId,
+      });
+      return;
+    }
+    const order = openOrders[orderIndex];
+    const currentPrice = PRICES[order.asset].price;
+console.log("Calculating PnL with:", {
+  currentPrice,
+  openingPrice: order.openingPrice.price,
+  margin: order.margin,
+  leverage: order.leverage
+})
+    const margin = Number(order.margin);
+    console.log("margin",margin);
+    const leverage = Number(order.leverage);
+    console.log("leverage",leverage);
+    const pnl = (currentPrice - order.openingPrice.price) * (margin) * (leverage);
+    console.log(pnl);// this is profit loss calculation
 
+    BALANCES[userId].locked -= Number(order.margin);
+    BALANCES[userId].usd += Number(order.margin) + pnl;
+    openOrders.splice(orderIndex, 1);
+    await tradeListener.xAdd("callback", "*", {
+      tradeId:closeId,
+      status: "CLOSED",
+      orderId,
+      userId,
+      pnl: pnl.toString(),
+    });
+    console.log(`Trade ${orderId} closed with PnL: ${pnl}`);
+  } catch (error) {
+    console.log("Error in closing the trade", error);
+  }
+}
